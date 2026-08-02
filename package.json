@@ -1,0 +1,29 @@
+{
+  "name": "data-cleaner",
+  "private": true,
+  "version": "1.0.0",
+  "description": "공공데이터 결측치 정리 실습기 (중학교 정보 · 데이터 · [9정02-02][9정02-04])",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node tests/make-files.mjs && node tests/run-tests.mjs && node tests/break-tests.mjs && node tests/kosis-test.mjs",
+    "test:perf": "node tests/perf.mjs"
+  },
+  "keywords": [
+    "education",
+    "middle-school",
+    "informatics",
+    "data-cleaning",
+    "public-data"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^8.1.5"
+  },
+  "dependencies": {
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  }
+}

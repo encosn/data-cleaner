@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>데이터 정제 실습실 — 공공데이터 빈 칸 정리하기</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     앱 머리말
+     ══════════════════════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="wrap">
+    <div>
+      <div class="app-title">데이터 정제 실습실</div>
+      <div class="app-sub">중학교 정보 · 데이터 영역 &nbsp;|&nbsp; [9정02-02] 목적에 맞게 데이터를 구분하여 관리하기</div>
+    </div>
+    <button type="button" class="btn btn-sm" id="btnHelp">❓ 도움말</button>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════
+     진행 표시 (화면 위에 고정)
+     ══════════════════════════════════════════════════════════ -->
+<div class="stepbar">
+  <div class="wrap">
+    <nav class="steps" id="steps" aria-label="진행 단계">
+      <button type="button" class="step" data-step="1">
+        <span class="step-name">1 파일 열기</span>
+        <span class="step-sub">엑셀·CSV 파일을 불러오세요</span>
+        <span class="step-state"></span>
+      </button>
+      <button type="button" class="step" data-step="2">
+        <span class="step-name">2 행·열 고르기</span>
+        <span class="step-sub">새 파일에 넣을 것만 고르세요</span>
+        <span class="step-state"></span>
+      </button>
+      <button type="button" class="step" data-step="3">
+        <span class="step-name">3 빈 칸 정리</span>
+        <span class="step-sub">뺄지 채울지 정하세요</span>
+        <span class="step-state"></span>
+      </button>
+      <button type="button" class="step" data-step="4">
+        <span class="step-name">4 엑셀로 저장</span>
+        <span class="step-sub">정리한 표를 내려받으세요</span>
+        <span class="step-state"></span>
+      </button>
+    </nav>
+    <div class="progress-track" id="progressTrack" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <div id="lockNotice"></div>
+
+  <!-- ════════════════════════════════════════════════════════
+       1단계 · 파일 열기
+       ════════════════════════════════════════════════════════ -->
+  <section class="panel" id="panel1" aria-labelledby="t1">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2 class="step-title" id="t1">1단계 · 파일 열기</h2>
+          <p class="lead">공공데이터포털이나 국가통계포털(KOSIS)에서 받은 엑셀·CSV 파일을 열어 보세요.</p>
+          <p class="lead">파일은 인터넷으로 보내지 않고, 이 컴퓨터의 브라우저 안에서만 처리됩니다.</p>
+        </div>
+      </div>
+
+      <details class="why">
+        <summary>왜 이걸 하나요?</summary>
+        <div class="why-body">
+          공공데이터는 사람이 보기 좋게 만들어져 있어서, 칸을 합쳐 놓거나 설명 줄이 위에 붙어 있는
+          경우가 많아요. 같은 값이 반복되면 아래 칸을 아예 비워 두기도 합니다.
+          컴퓨터로 계산하려면 「열 이름 한 줄 + 자료 여러 줄」 모양으로 바꿔야 합니다.
+          그래서 먼저 열 이름이 어디 있는지 정하고, 비어 보이는 칸이 정말 빈 칸인지 확인합니다.
+        </div>
+      </details>
+
+      <div id="dropWrap">
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon" aria-hidden="true">⬆</div>
+          <div class="dropzone-main">여기로 파일을 끌어다 놓으세요</div>
+          <div class="dropzone-or">또는</div>
+          <button type="button" class="btn btn-primary" id="btnPickFile">파일 고르기</button>
+          <div class="dropzone-hint">.xlsx · .xls · .csv 파일을 쓸 수 있어요 (최대 20MB)</div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.txt" class="sr-only">
+        </div>
+
+        <div class="notice notice-info" style="margin-top:18px">
+          <span class="notice-icon" aria-hidden="true">💡</span>
+          <div>
+            <strong>파일이 없나요?</strong>
+            연습용 예시 파일로 먼저 해 볼 수 있어요. 빈 칸과 병합된 셀이 함께 들어 있어 연습에 좋습니다.
+            <div class="btn-row" style="margin-top:12px">
+              <button type="button" class="btn btn-sm" id="btnSample">연습용 예시 파일로 시작하기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="fileError"></div>
+    </div>
+
+    <div class="card" id="cardLoaded" hidden>
+      <div class="card-head">
+        <h3 id="loadedTitle">파일을 열었어요</h3>
+        <button type="button" class="btn btn-sm" id="btnOtherFile">다른 파일 열기</button>
+      </div>
+
+      <div id="sheetPick"></div>
+      <div id="encodingPick"></div>
+
+      <h3 style="margin-top:20px">머리글(열 이름이 적힌 줄) 확인</h3>
+      <div id="headerPick"></div>
+
+      <div id="parseNotices"></div>
+    </div>
+
+    <!-- 반복 생략(비어 보이지만 위 값과 같은 칸) 안내 -->
+    <div class="card" id="cardOmission" hidden>
+      <h3>비어 보이지만 빈 칸이 아닌 칸</h3>
+      <div id="omissionBox"></div>
+    </div>
+
+    <div class="card" id="cardColNames" hidden>
+      <h3>만들어진 열 이름</h3>
+      <div id="colNameList"></div>
+    </div>
+
+    <div class="card" id="cardPreview1" hidden>
+      <h3>자료 미리보기</h3>
+      <div id="preview1"></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════
+       2단계 · 행·열 고르기
+       ════════════════════════════════════════════════════════ -->
+  <section class="panel" id="panel2" hidden aria-labelledby="t2">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2 class="step-title" id="t2">2단계 · 새 파일에 넣을 행·열 고르기</h2>
+          <p class="lead">알아보려는 것에 필요한 <b>열(속성)</b>과 <b>행(자료)</b>만 골라 두면 표가 읽기 쉬워집니다.</p>
+        </div>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label for="goalInput">무엇을 알아보고 싶은지 한 줄로 적어 보세요 (적지 않아도 됩니다)</label>
+        <input type="text" class="text-input" id="goalInput"
+               placeholder="예) 우리 지역에 어떤 성씨가 많은지">
+      </div>
+      <details class="why">
+        <summary>왜 이걸 하나요?</summary>
+        <div class="why-body">
+          필요 없는 열이 많으면 표가 복잡해서 읽기 어렵습니다. 「무엇을 알아볼까?」를 먼저 정하고,
+          그 질문에 답할 수 있는 열과 행만 남기는 것이 데이터 관리의 시작이에요. [9정02-02]
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3 id="pickCount">고른 열: 0 / 0개</h3>
+        <div class="btn-row">
+          <button type="button" class="btn btn-sm js-undo" title="Ctrl+Z">↺ 되돌리기</button>
+          <button type="button" class="btn btn-sm js-redo" title="Ctrl+Y">↻ 다시 하기</button>
+          <button type="button" class="btn btn-sm" id="btnPickAll">전체 고르기</button>
+          <button type="button" class="btn btn-sm" id="btnPickNone">전체 지우기</button>
+          <button type="button" class="btn btn-sm" id="btnPickRecommend">추천만 고르기</button>
+        </div>
+      </div>
+      <p class="muted">빈 칸이 30%보다 적고, 값이 여러 가지인 열을 추천합니다.</p>
+      <div id="pickCoach"></div>
+      <div class="pick-grid" id="pickGrid"></div>
+    </div>
+
+    <div class="card">
+      <h3>열 순서와 이름 (엑셀에 이 순서로 저장됩니다)</h3>
+      <p class="muted">이름을 바꾸고 싶으면 오른쪽 칸에 새 이름을 적으세요. 비워 두면 원래 이름을 씁니다.</p>
+      <div class="order-list" id="orderList"></div>
+    </div>
+
+    <!-- 행 고르기 -->
+    <div class="card" id="cardRowFilter">
+      <div class="card-head">
+        <h3>행(자료) 고르기</h3>
+        <div class="btn-row">
+          <button type="button" class="btn btn-sm" id="btnRowFilterReset">⟲ 모든 행 넣기</button>
+        </div>
+      </div>
+      <p class="muted">
+        값을 눌러 켜고 끄면 그 값을 가진 행만 남습니다. 아무것도 끄지 않으면 모든 행이 들어갑니다.
+      </p>
+      <div id="rowFilterStatus"></div>
+      <div id="rowFilterBox"></div>
+    </div>
+
+    <div class="card">
+      <h3>고른 행·열만 본 미리보기</h3>
+      <div id="preview2"></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════
+       3단계 · 빈 칸 정리
+       ════════════════════════════════════════════════════════ -->
+  <section class="panel" id="panel3" hidden aria-labelledby="t3">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2 class="step-title" id="t3">3단계 · 결측치(빈 칸) 정리</h2>
+          <p class="lead">자료에 값이 없는 칸을 결측치라고 합니다. 그대로 두면 계산과 그래프가 틀어져요.</p>
+          <p class="lead">열마다 <b>그 행을 뺄지</b>, <b>어떤 값을 넣을지</b> 골라 보세요. 그대로 두어도 다음 단계로 갈 수 있습니다.</p>
+        </div>
+      </div>
+      <details class="why">
+        <summary>왜 이걸 하나요?</summary>
+        <div class="why-body">
+          빈 칸이 있으면 평균을 구할 때 개수가 달라지고, 그래프에 이상한 자리가 생깁니다.
+          빈 칸을 그냥 두기·채우기·지우기 중 무엇을 고르느냐에 따라 결과가 달라집니다.
+          어떤 선택이 우리 질문에 알맞은지 생각해 보세요.
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3>지금 상태</h3>
+      <div class="stat-grid" id="stats3" aria-live="polite"></div>
+    </div>
+
+    <div class="card" id="cardNoMissing" hidden>
+      <div class="notice notice-ok">
+        <span class="notice-icon" aria-hidden="true">✔</span>
+        <div>
+          <strong>고른 자료에는 빈 칸이 없어요.</strong>
+          아주 깔끔한 자료입니다. 바로 다음 단계로 가세요.
+          아래에서 「빈 칸으로 볼 값」을 켜 보면 숨어 있던 빈 칸이 나타날 수도 있어요.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>빈 칸으로 볼 값 고르기</h3>
+      <p class="muted">
+        공공데이터에는 빈 칸 대신 이런 글자가 들어 있기도 해요. 눌러서 켜고 끄면 위의 숫자가 바로 바뀝니다.
+        괄호 안 숫자는 이 자료에 그 표기가 몇 번 나오는지입니다.
+      </p>
+      <div class="chips" id="tokenChips"></div>
+      <div id="tokenHelp"></div>
+    </div>
+
+    <div class="card" id="cardTotals" hidden>
+      <h3>합계·전체로 보이는 줄</h3>
+      <div id="totalsBox"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>열마다 어떻게 할까요</h3>
+        <div class="btn-row">
+          <button type="button" class="btn btn-sm js-undo" title="Ctrl+Z">↺ 되돌리기</button>
+          <button type="button" class="btn btn-sm js-redo" title="Ctrl+Y">↻ 다시 하기</button>
+          <button type="button" class="btn btn-sm" id="btnRecommendAll">추천대로 한 번에 맞추기</button>
+          <button type="button" class="btn btn-sm" id="btnResetPlan">⟲ 모두 「그대로 두기」로</button>
+        </div>
+      </div>
+      <div class="notice notice-info">
+        <span class="notice-icon" aria-hidden="true">📌</span>
+        <div>
+          <strong>앱이 붙인 「추천」은 정답이 아니에요.</strong>
+          이런 자료에서 흔히 쓰는 방법을 골라 둔 것뿐입니다. 두세 가지를 눌러 보고 위의 숫자가
+          어떻게 바뀌는지 살펴보세요. 마지막에 <b>「나는 왜 이 방법을 골랐나」</b>를 한 문장으로
+          말할 수 있으면 성공이에요.
+        </div>
+      </div>
+      <div class="col-list" id="colList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>정리한 결과 미리보기</h3>
+        <div class="table-tools">
+          <label><input type="radio" name="prevMode" value="after" checked> 정리 후 보기</label>
+          <label><input type="radio" name="prevMode" value="before"> 정리 전 보기</label>
+        </div>
+      </div>
+      <div id="preview3"></div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════════════════════
+       4단계 · 엑셀로 저장
+       ════════════════════════════════════════════════════════ -->
+  <section class="panel" id="panel4" hidden aria-labelledby="t4">
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h2 class="step-title" id="t4">4단계 · 엑셀로 저장</h2>
+          <p class="lead">정리한 표를 엑셀 파일로 내려받으세요. 파일은 이 컴퓨터에만 저장됩니다.</p>
+        </div>
+      </div>
+      <details class="why">
+        <summary>왜 이걸 하나요?</summary>
+        <div class="why-body">
+          정리한 자료를 저장해 두면 엑셀에서 그래프를 만들고 다른 사람과 나눌 수 있습니다.
+          어떻게 정리했는지 함께 기록해 두어야 다른 사람이 결과를 믿을 수 있어요. [9정02-04]
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <h3>무엇이 달라졌나요 (정리 전 → 정리 후)</h3>
+      <div id="compareTable"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>내가 한 일</h3>
+        <button type="button" class="btn btn-sm" id="btnCopyReport">글로 복사하기</button>
+      </div>
+      <ol class="report" id="reportList"></ol>
+      <div class="notice notice-warn" style="margin-top:16px">
+        <span class="notice-icon" aria-hidden="true">📌</span>
+        <div>
+          <strong>채워 넣은 값은 우리가 추측한 값이에요.</strong>
+          발표나 보고서에서는 「빈 칸 34개는 가운데 값으로 채웠습니다」처럼 반드시 밝혀야 해요.
+          아래에서 「내가 한 일」을 두 번째 시트로 함께 저장할 수 있습니다.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>저장 설정</h3>
+      <div class="save-fields">
+        <div class="field">
+          <label for="saveName">파일 이름</label>
+          <input type="text" class="text-input" id="saveName" style="min-width:280px">
+        </div>
+        <div class="field">
+          <label for="saveSheet">시트 이름</label>
+          <input type="text" class="text-input" id="saveSheet" value="정리한자료" style="min-width:200px">
+        </div>
+      </div>
+      <div class="check-row">
+        <label><input type="checkbox" id="chkReport" checked> 「내가 한 일」을 두 번째 시트로 함께 넣기</label>
+      </div>
+      <div id="saveError"></div>
+      <div class="btn-row" style="margin-top:20px">
+        <button type="button" class="btn btn-primary" id="btnSaveXlsx">엑셀 파일로 저장하기</button>
+        <button type="button" class="btn" id="btnSaveCsv">CSV로 저장하기</button>
+        <button type="button" class="btn btn-danger" id="btnRestart">처음부터 다시 하기</button>
+      </div>
+      <div id="saveResult"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <h3>확인 문제</h3>
+        <div class="quiz-score" id="quizScore">맞힌 개수: 0 / 0</div>
+      </div>
+      <p class="muted">내가 정리한 자료로 풀어 보세요.</p>
+      <div id="quizList"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════════════
+     하단 내비게이션 (화면 아래에 고정)
+     ══════════════════════════════════════════════════════════ -->
+<div class="navbar">
+  <div class="wrap">
+    <button type="button" class="btn" id="btnPrev">◀ 이전</button>
+    <div class="nav-status" id="navStatus" aria-live="polite">1 / 4 단계 · 아직 파일을 열지 않았어요</div>
+    <button type="button" class="btn btn-primary" id="btnNext">다음: 행·열 고르기 ▶</button>
+  </div>
+</div>
+
+<div class="toast-area" id="toastArea" aria-live="polite"></div>
+
+<dialog class="ask" id="askDialog">
+  <div class="ask-body">
+    <h3 id="askTitle">확인</h3>
+    <div id="askBody"></div>
+  </div>
+  <div class="ask-actions">
+    <button type="button" class="btn" id="askCancel">그만두기</button>
+    <button type="button" class="btn btn-primary" id="askOk">확인</button>
+  </div>
+</dialog>
+
+<script type="module" src="./main.js"></script>
+</body>
+</html>
