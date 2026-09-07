@@ -17,6 +17,9 @@
 - **이 폴더가 이 앱의 메인 저장 폴더다.** npm 설치물과 빌드 결과물도 모두 이 안에 둔다.
   프로젝트 루트(`C:\project_AI`)에는 아무것도 설치하지 않는다.
 - **배포 주소**: **https://encosn.github.io/data-cleaner/** (저장소 `encosn/data-cleaner`)
+  ⚠️ **2026-09-07 에야 저장소가 실제로 만들어졌다.** 그 전까지 문서에는 배포된 것처럼
+  적혀 있었지만 `encosn/data-cleaner` 는 존재하지 않았고, 로컬에 커밋과 `remote` 설정만
+  있었다 — 그래서 hub 2단원의 이 링크는 **줄곧 404 였다.** 지금은 푸시했고 정상적으로 열린다.
   · 메인페이지 2단원에서 이 주소로 들어온다 → https://encosn.github.io/encosn/
   · 배포는 `.github/workflows/deploy.yml` 이 한다: `npm ci` → **`npm test`** → `npm run build` → `dist/`.
     **테스트가 깨지면 배포가 멈춘다.** `main` 에 push 하기 전에 `npm test` 를 돌려 볼 것.
